@@ -3,6 +3,13 @@ const bodyParser = require('body-parser')
 
 const app = express();
 const PORT = 3001;
+const requestLogger = (req, res, next) => {
+    console.log('Method:', req.method);
+    console.log('Path:  ', req.path);
+    console.log('Body:  ', req.body);
+    console.log('---');
+    next();
+};
 let phonebook = [
     {
         name: 'Arto Hellas',
@@ -31,6 +38,8 @@ app.use((req, res, next) => {
     req.start = Date.now();
     next();
 });
+app.use(requestLogger);
+
 app.get('/info', (req, res) => {
     res.send(`
     <p>phonebook has info for ${phonebook.length} people<p>
@@ -74,6 +83,11 @@ app.route('/api/persons/:id')
 
         res.status(204).end();
     });
+
+const unknownEndpoint = (req, res) => {
+    res.status(404).send({ error: 'unknown endpoint' });
+};
+app.use(unknownEndpoint);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
