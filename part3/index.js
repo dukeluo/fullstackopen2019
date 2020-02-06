@@ -1,15 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser')
+const morgan = require('morgan');
 
 const app = express();
 const PORT = 3001;
-const requestLogger = (req, res, next) => {
-    console.log('Method:', req.method);
-    console.log('Path:  ', req.path);
-    console.log('Body:  ', req.body);
-    console.log('---');
-    next();
-};
 let phonebook = [
     {
         name: 'Arto Hellas',
@@ -33,12 +27,14 @@ let phonebook = [
     },
 ];
 
+
 app.use(bodyParser.json());
+morgan.token('body', (req) => JSON.stringify(req.body));
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 app.use((req, res, next) => {
     req.start = Date.now();
     next();
 });
-app.use(requestLogger);
 
 app.get('/info', (req, res) => {
     res.send(`
