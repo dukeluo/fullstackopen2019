@@ -3,30 +3,10 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan');
 const cors = require('cors');
 
+const Phonebook = require('./models/phonebook');
+
 const app = express();
 const PORT = process.env.PORT || 3001;
-let phonebook = [
-    {
-        name: 'Arto Hellas',
-        number: '040-123456',
-        id: 1,
-    },
-    {
-        name: 'Ada Lovelace',
-        number: '39-44-5323523',
-        id: 4,
-    },
-    {
-        name: 'Dan Abramov',
-        number: '12-43-234345',
-        id: 3,
-    },
-    {
-        name: 'Mary Poppendieck',
-        number: '39-23-6423122',
-        id: 2,
-    },
-];
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -37,47 +17,52 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/info', (req, res) => {
+app.get('/info', async (req, res) => {
+    const persons = await Phonebook.find({});
+
     res.send(`
-    <p>phonebook has info for ${phonebook.length} people<p>
+    <p>phonebook has info for ${persons.length} people<p>
     <p>request start: ${new Date(req.start)}<p>
     `);
 });
 app.route('/api/persons')
-    .get((req, res) => {
-        res.json(phonebook);
+    .get(async (req, res) => {
+        let persons = await Phonebook.find({});
+
+        res.json(persons.map(person => person.toJSON()));
     })
-    .post((req, res) => {
+    .post(async (req, res) => {
         let person = req.body;
         let { name, number } = person;
+        let persons = await Phonebook.find({});
 
         if (!name || !number) {
             return res.status(400).json({
                 error: 'name or number missing',
             });
         }
-        if (phonebook.some((person) => person.name === name)) {
+        if (persons.some((person) => person.name === name)) {
             return res.status(400).json({
                 error: 'name is duplicated',
             });
         }
 
-        person.id = phonebook.length + 1;
-        phonebook.push(person);
-        res.json(person);
+        let newPerson = new Phonebook({ name, number });
+        let savedPerson = await newPerson.save();
+
+        res.status(201).json(savedPerson.toJSON());
     });
 app.route('/api/persons/:id')
-    .get((req, res) => {
-        let person = phonebook.find((person) => person.id === +req.params.id);
+    .get(async (req, res) => {
+        let person = await Phonebook.findById(req.params.id);
 
         if (!person) {
             return res.status(404).end();
         }
-        res.json(person);
+        res.json(person.toJSON());
     })
-    .delete((req, res) => {
-        phonebook = phonebook.filter((person) => person.id !== +req.params.id);
-
+    .delete(async (req, res) => {
+        await Phonebook.findByIdAndRemove(req.params.id);
         res.status(204).end();
     });
 
