@@ -1,4 +1,9 @@
+./.vscode
+./.DS_Store
 /part1/node_modules
 /part1/dist
 /part1/.cache
 /part1/yarn-error.log
+/part3/node_modules
+/part3/yarn-error.log
+/part3/mongo-volume
