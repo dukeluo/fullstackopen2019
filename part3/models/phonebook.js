@@ -1,7 +1,7 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 
-const MONGODB_URL_DEV = 'mongodb://stack:stack@127.0.0.1:27017/fullstackopen2019'
-const url = process.env.MONGODB_URL || MONGODB_URL_DEV;
+const url = process.env.MONGODB_URL;
 
 console.log('connecting to', url);
 mongoose.connect(url, {

@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const bodyParser = require('body-parser')
 const morgan = require('morgan');
@@ -6,7 +7,10 @@ const cors = require('cors');
 const Phonebook = require('./models/phonebook');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT;
+const unknownEndpoint = (req, res) => {
+    res.status(404).send({ error: 'unknown endpoint' });
+};
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -66,11 +70,7 @@ app.route('/api/persons/:id')
         res.status(204).end();
     });
 
-const unknownEndpoint = (req, res) => {
-    res.status(404).send({ error: 'unknown endpoint' });
-};
 app.use(unknownEndpoint);
-
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
