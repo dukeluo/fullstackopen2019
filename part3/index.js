@@ -67,7 +67,7 @@ app.route('/api/persons/:id')
         let person = await Phonebook.findById(req.params.id).catch(error => next(error));
 
         if (person === undefined) {
-            return ;
+            return;
         }
         if (person === null) {
             return res.status(404).end();
@@ -78,12 +78,27 @@ app.route('/api/persons/:id')
         let deletedPerson = await Phonebook.findByIdAndRemove(req.params.id).catch(error => next(error));
 
         if (deletedPerson === undefined) {
-            return ;
+            return;
         }
         if (deletedPerson === null) {
             return res.status(404).end();
         }
         res.status(204).end();
+    })
+    .put(async (req, res, next) => {
+        let body = req.body;
+        let { name, number } = body;
+        let person = { name, number };
+        let updatedPerson = await Phonebook.findByIdAndUpdate(req.params.id, person, { new: true })
+            .catch(error => next(error));
+
+        if (updatedPerson === undefined) {
+            return;
+        }
+        if (updatedPerson === null) {
+            return res.status(404).end();
+        }
+        res.json(updatedPerson.toJSON());
     });
 
 app.use(unknownEndpoint);
