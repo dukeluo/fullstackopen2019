@@ -3,23 +3,29 @@ const express = require('express');
 const bodyParser = require('body-parser')
 const morgan = require('morgan');
 const cors = require('cors');
-
 const Phonebook = require('./models/phonebook');
 
 const app = express();
 const PORT = process.env.PORT;
-const unknownEndpoint = (req, res) => {
-    res.status(404).send({ error: 'unknown endpoint' });
+
+const requestStart = (req, res, next) => {
+    req.start = Date.now();
+    next();
+};
+const unknownEndpoint = (req, res) => res.status(404).send({ error: 'unknown endpoint' });
+const errorHandler = (error, req, res, next) => {
+    console.error(error.message);
+    if (error.name === 'CastError' && error.kind === 'ObjectId') {
+        return res.status(400).send({ error: 'malformed id' });
+    }
+    next(error);
 };
 
 app.use(cors());
 app.use(bodyParser.json());
 morgan.token('body', (req) => JSON.stringify(req.body));
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
-app.use((req, res, next) => {
-    req.start = Date.now();
-    next();
-});
+app.use(requestStart);
 
 app.get('/info', async (req, res) => {
     const persons = await Phonebook.find({});
@@ -57,20 +63,31 @@ app.route('/api/persons')
         res.status(201).json(savedPerson.toJSON());
     });
 app.route('/api/persons/:id')
-    .get(async (req, res) => {
-        let person = await Phonebook.findById(req.params.id);
+    .get(async (req, res, next) => {
+        let person = await Phonebook.findById(req.params.id).catch(error => next(error));
 
-        if (!person) {
+        if (person === undefined) {
+            return ;
+        }
+        if (person === null) {
             return res.status(404).end();
         }
         res.json(person.toJSON());
     })
-    .delete(async (req, res) => {
-        await Phonebook.findByIdAndRemove(req.params.id);
+    .delete(async (req, res, next) => {
+        let deletedPerson = await Phonebook.findByIdAndRemove(req.params.id).catch(error => next(error));
+
+        if (deletedPerson === undefined) {
+            return ;
+        }
+        if (deletedPerson === null) {
+            return res.status(404).end();
+        }
         res.status(204).end();
     });
 
 app.use(unknownEndpoint);
+app.use(errorHandler);
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
