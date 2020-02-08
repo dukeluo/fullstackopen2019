@@ -17,6 +17,8 @@ const errorHandler = (error, req, res, next) => {
     console.error(error.message);
     if (error.name === 'CastError' && error.kind === 'ObjectId') {
         return res.status(400).send({ error: 'malformed id' });
+    } else if (error.name === 'ValidationError') {
+        return res.status(400).send({ error: error.message });
     }
     next(error);
 };
@@ -41,16 +43,11 @@ app.route('/api/persons')
 
         res.json(persons.map(person => person.toJSON()));
     })
-    .post(async (req, res) => {
+    .post(async (req, res, next) => {
         let person = req.body;
         let { name, number } = person;
         let persons = await Phonebook.find({});
 
-        if (!name || !number) {
-            return res.status(400).json({
-                error: 'name or number missing',
-            });
-        }
         if (persons.some((person) => person.name === name)) {
             return res.status(400).json({
                 error: 'name is duplicated',
@@ -58,13 +55,18 @@ app.route('/api/persons')
         }
 
         let newPerson = new Phonebook({ name, number });
-        let savedPerson = await newPerson.save();
+        let savedPerson = await newPerson.save()
+            .catch(error => next(error));
 
+        if (savedPerson === undefined) {
+            return;
+        }
         res.status(201).json(savedPerson.toJSON());
     });
 app.route('/api/persons/:id')
     .get(async (req, res, next) => {
-        let person = await Phonebook.findById(req.params.id).catch(error => next(error));
+        let person = await Phonebook.findById(req.params.id)
+            .catch(error => next(error));
 
         if (person === undefined) {
             return;
@@ -75,7 +77,8 @@ app.route('/api/persons/:id')
         res.json(person.toJSON());
     })
     .delete(async (req, res, next) => {
-        let deletedPerson = await Phonebook.findByIdAndRemove(req.params.id).catch(error => next(error));
+        let deletedPerson = await Phonebook.findByIdAndRemove(req.params.id)
+            .catch(error => next(error));
 
         if (deletedPerson === undefined) {
             return;
