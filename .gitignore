@@ -6,4 +6,4 @@
 /part1/yarn-error.log
 /part3/node_modules
 /part3/yarn-error.log
-/part3/mongo-volume
+/part3/docker/mongo-volume
