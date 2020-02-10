@@ -1,6 +1,6 @@
 const config = require('./utils/config');
 const express = require('express');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const phonebooksRouter = require('./controllers/phonebooks');
