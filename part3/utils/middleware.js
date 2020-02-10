@@ -1,4 +1,5 @@
 const morgan = require('morgan');
+const logger = require('../utils/logger');
 
 const startRequest = (req, res, next) => {
     req.start = Date.now();
@@ -14,7 +15,7 @@ const requestLogger = () => {
 const unknownEndpoint = (req, res) => res.status(404).send({ error: 'unknown endpoint' });
 
 const errorHandler = (error, req, res, next) => {
-    console.error(error.message);
+    logger.error(error.message);
     if (error.name === 'CastError' && error.kind === 'ObjectId') {
         return res.status(400).send({ error: 'malformed id' });
     } else if (error.name === 'ValidationError') {

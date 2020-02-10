@@ -5,17 +5,18 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const phonebooksRouter = require('./controllers/phonebooks');
 const middleware = require('./utils/middleware');
+const logger = require('./utils/logger');
 const app = express();
 
-console.log('connecting to', config.MONGODB_URL);
+logger.info('connecting to', config.MONGODB_URL);
 mongoose.connect(config.MONGODB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
 }).then(result => {
-    console.log('connected to MongoDB');
+    logger.info('connected to MongoDB');
 }).catch(error => {
-    console.log('error connecting to MongoDB:', error.message);
+    logger.error('error connecting to MongoDB:', error.message);
 });
 
 app.use(cors());
