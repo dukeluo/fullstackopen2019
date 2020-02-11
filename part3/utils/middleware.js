@@ -7,6 +7,9 @@ const startRequest = (req, res, next) => {
 };
 
 const requestLogger = () => {
+    if (global.process.env.NODE_ENV === 'test') {
+        return (req, res, next) => next();
+    }
     morgan.token('body', (req) => JSON.stringify(req.body));
 
     return morgan(':method :url :status :res[content-length] - :response-time ms :body');
