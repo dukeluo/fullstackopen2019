@@ -21,7 +21,7 @@ phonebooksRouter.route('/')
         let { name, number } = person;
         let persons = await Phonebook.find({});
 
-        if (persons.some((person) => person.name === name.toString())) {
+        if (name && persons.some((person) => person.name === name.toString())) {
             return res.status(400).json({
                 error: 'name is duplicated',
             });
