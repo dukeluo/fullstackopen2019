@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const mongoose = require('mongoose');
 const phonebooksRouter = require('./controllers/phonebooks');
+const usersRouter = require('./controllers/users');
 const middleware = require('./utils/middleware');
 const logger = require('./utils/logger');
 const app = express();
@@ -26,6 +27,7 @@ app.use(middleware.requestLogger());
 app.use(middleware.startRequest);
 
 app.use('/api/persons', phonebooksRouter);
+app.use('/api/users', usersRouter);
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);

@@ -1,4 +1,3 @@
-require('dotenv').config();
 const mongoose = require('mongoose');
 
 const phonebookSchema = new mongoose.Schema({
@@ -9,6 +8,10 @@ const phonebookSchema = new mongoose.Schema({
     number: {
         type: Number,
         required: true,
+    },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
     },
 });
 
