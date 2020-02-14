@@ -64,9 +64,7 @@ describe('when there is initially a phonebook', () => {
                 name: 'Jane',
                 number: 20000203
             };
-
             await api.post('/api/persons').send(person).expect(201);
-
             const phonebookAtEnd = await helper.personsInDb();
             const names = phonebookAtEnd.map(p => p.name);
 
@@ -79,9 +77,7 @@ describe('when there is initially a phonebook', () => {
             const person = {
                 number: 20000203
             };
-
             await api.post('/api/persons').send(person).expect(400);
-
             const phonebookAtEnd = await helper.personsInDb();
 
             expect(phonebookAtEnd.length).toBe(helper.initialPhonebook.length);
@@ -92,9 +88,7 @@ describe('when there is initially a phonebook', () => {
             const person = {
                 name: 'Jane',
             };
-
             await api.post('/api/persons').send(person).expect(400);
-
             const phonebookAtEnd = await helper.personsInDb();
 
             expect(phonebookAtEnd.length).toBe(helper.initialPhonebook.length);

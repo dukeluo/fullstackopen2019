@@ -19,11 +19,10 @@ describe('when there is initially a user', () => {
                 username: 'janes',
                 password: 'abc',
             };
-
             await api.post('/api/users').send(user).expect(201);
-
             const userAtEnd = await helper.usersInDb();
             const usernames = userAtEnd.map(u => u.username);
+
             expect(userAtEnd.length).toBe(userAtStart.length + 1);
             expect(usernames).toContain(user.username);
             done();
@@ -36,10 +35,11 @@ describe('when there is initially a user', () => {
                 username: 'root',
                 password: 'abc',
             };
-
-            await api.post('/api/users').send(user).expect(400);
-
+            const { status, body } = await api.post('/api/users').send(user).expect(400);
             const userAtEnd = await helper.usersInDb();
+
+            expect(status).toBe(400);
+            expect(body.error).toContain('`username` to be unique');
             expect(userAtEnd.length).toBe(userAtStart.length);
             done();
         });
