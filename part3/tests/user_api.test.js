@@ -11,6 +11,29 @@ beforeEach(async () => {
 });
 
 describe('when there is initially a user', () => {
+    test('user are returned as json ', async (done) => {
+        const { status, header } = await api.get('/api/users');
+
+        expect(status).toBe(200);
+        expect(header['content-type']).toContain('application/json');
+        done();
+    });
+
+    test('all users are returned', async (done) => {
+        const { body } = await api.get('/api/users');
+
+        expect(body.length).toBe(helper.initialUser.length);
+        done();
+    });
+
+    test('a specific user is within the returned users', async (done) => {
+        const { body } = await api.get('/api/users');
+        const usernames = body.map(u => u.username);
+
+        expect(usernames).toContain(helper.initialUser[0].username);
+        done();
+    });
+
     describe('adding a fresh user', () => {
         test('succeeds with a valid user', async (done) => {
             const userAtStart = await helper.usersInDb();

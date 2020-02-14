@@ -33,7 +33,7 @@ const personsInDb = async () => {
 
 const initialUser = [
     {
-        name: 'root',
+        name: 'admin',
         username: 'root',
         passwordHash: 'password1234',
     }
