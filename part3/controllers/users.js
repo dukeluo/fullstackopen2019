@@ -21,7 +21,11 @@ userRouter.route('/')
         res.status(201).json(savedUser);
     })
     .get(async (req, res) => {
-        const users = await User.find({});
+        const users = await User.find({})
+            .populate('persons', {
+                name: 1,
+                number: 1,
+            });
 
         res.json(users.map(u => u.toJSON()));
     });

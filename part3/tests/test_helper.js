@@ -45,6 +45,12 @@ const usersInDb = async () => {
     return users.map(user => user.toJSON());
 };
 
+const validUserId = async () => {
+    const user = await User.findOne({ username: 'root' });
+
+    return user._id;
+};
+
 module.exports = {
     initialPhonebook,
     nonExistingId,
@@ -52,4 +58,5 @@ module.exports = {
     personsInDb,
     initialUser,
     usersInDb,
+    validUserId,
 };

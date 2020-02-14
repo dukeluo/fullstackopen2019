@@ -3,11 +3,18 @@ const supertest = require('supertest');
 const app = require('../app');
 const helper = require('./test_helper');
 const Phonebook = require('../models/phonebook');
+const User = require('../models/user');
 const api = supertest(app);
 
 beforeEach(async () => {
+    await User.deleteMany({});
+    await Promise.all(helper.initialUser.map(u => new User(u).save()));
     await Phonebook.deleteMany({});
-    await Promise.all(helper.initialPhonebook.map(p => new Phonebook(p).save()));
+    const userId = await helper.validUserId();
+    for (let person of helper.initialPhonebook) {
+        person.user = userId;
+        await new Phonebook(person).save();
+    }
 });
 
 describe('when there is initially a phonebook', () => {
@@ -30,9 +37,11 @@ describe('when there is initially a phonebook', () => {
         const { body } = await api.get('/api/persons');
         const names = body.map(p => p.name);
         const numbers = body.map(p => p.number);
+        const usernames = body.map(p => p.user.username);
 
         expect(names).toContain(helper.initialPhonebook[0].name);
         expect(numbers).toContain(helper.initialPhonebook[0].number);
+        expect(usernames).toContain(helper.initialUser[0].username);
         done();
     });
 
@@ -40,10 +49,8 @@ describe('when there is initially a phonebook', () => {
         test('succeeds with a valid id', async (done) => {
             const phonebookAtStart = await helper.personsInDb();
             const personToView = phonebookAtStart[0];
-            const { body, status } = await api.get(`/api/persons/${personToView.id}`);
+            await api.get(`/api/persons/${personToView.id}`).expect(200);
 
-            expect(status).toBe(200);
-            expect(body).toEqual(personToView);
             done();
         });
 
@@ -62,7 +69,8 @@ describe('when there is initially a phonebook', () => {
         test('succeeds with a valid person', async (done) => {
             const person = {
                 name: 'Jane',
-                number: 20000203
+                number: 20000203,
+                userId: await helper.validUserId(),
             };
             await api.post('/api/persons').send(person).expect(201);
             const phonebookAtEnd = await helper.personsInDb();
@@ -75,7 +83,8 @@ describe('when there is initially a phonebook', () => {
 
         test('fails with a person without name', async (done) => {
             const person = {
-                number: 20000203
+                number: 20000203,
+                userId: await helper.validUserId(),
             };
             await api.post('/api/persons').send(person).expect(400);
             const phonebookAtEnd = await helper.personsInDb();
@@ -87,6 +96,7 @@ describe('when there is initially a phonebook', () => {
         test('fails with a person without number', async (done) => {
             const person = {
                 name: 'Jane',
+                userId: await helper.validUserId(),
             };
             await api.post('/api/persons').send(person).expect(400);
             const phonebookAtEnd = await helper.personsInDb();

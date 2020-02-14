@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    notes: [
+    persons: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Phonebook',

@@ -1,5 +1,6 @@
 const phonebooksRouter = require('express').Router();
 const Phonebook = require('../models/phonebook');
+const User = require('../models/user');
 
 phonebooksRouter.get('/info', async (req, res) => {
     const persons = await Phonebook.find({});
@@ -12,14 +13,18 @@ phonebooksRouter.get('/info', async (req, res) => {
 
 phonebooksRouter.route('/')
     .get(async (req, res) => {
-        let persons = await Phonebook.find({});
-
+        let persons = await Phonebook.find({})
+            .populate('user', {
+                name: 1,
+                username: 1,
+            });
         res.json(persons.map(person => person.toJSON()));
     })
     .post(async (req, res, next) => {
-        let person = req.body;
-        let { name, number } = person;
+        let { body } = req;
+        let { name, number, userId } = body;
         let persons = await Phonebook.find({});
+        let user = await User.findById(userId);
 
         if (name && persons.some((person) => person.name === name.toString())) {
             return res.status(400).json({
@@ -27,14 +32,17 @@ phonebooksRouter.route('/')
             });
         }
 
-        let newPerson = new Phonebook({ name, number });
-        let savedPerson = await newPerson.save()
-            .catch(error => next(error));
+        let newPerson = new Phonebook({ name, number, user: user._id });
 
-        if (savedPerson === undefined) {
-            return;
+        try {
+            let savedPerson = await newPerson.save();
+
+            user.persons = user.persons.concat(savedPerson._id);
+            await user.save();
+            res.status(201).json(savedPerson.toJSON());
+        } catch (exception) {
+            next(exception);
         }
-        res.status(201).json(savedPerson.toJSON());
     });
 
 phonebooksRouter.route('/:id')
