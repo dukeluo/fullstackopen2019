@@ -3,11 +3,18 @@ const supertest = require('supertest');
 const app = require('../app');
 const helper = require('./test_helper');
 const User = require('../models/user');
+const Phonebook = require('../models/phonebook');
 const api = supertest(app);
 
 beforeEach(async () => {
+    await Phonebook.deleteMany({});
+    await Promise.all(helper.initialPhonebook.map(u => new Phonebook(u).save()));
+    const initialPersons = await helper.personsInDb();
     await User.deleteMany({});
-    await Promise.all(helper.initialUser.map(u => new User(u).save()));
+    for (let user of helper.initialUser) {
+        user.persons = initialPersons.map(p => p.id);
+        await new User(user).save();
+    }
 });
 
 describe('when there is initially a user', () => {
@@ -29,8 +36,12 @@ describe('when there is initially a user', () => {
     test('a specific user is within the returned users', async (done) => {
         const { body } = await api.get('/api/users');
         const usernames = body.map(u => u.username);
+        const personNames = body[0].persons.map(p => p.name);
+        const personNumbers = body[0].persons.map(p => p.number);
 
         expect(usernames).toContain(helper.initialUser[0].username);
+        expect(personNames).toEqual(helper.initialPhonebook.map(p => p.name));
+        expect(personNumbers).toEqual(helper.initialPhonebook.map(p => p.number));
         done();
     });
 
