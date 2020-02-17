@@ -5,6 +5,7 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 const phonebooksRouter = require('./controllers/phonebooks');
 const usersRouter = require('./controllers/users');
+const loginRouter = require('./controllers/login');
 const middleware = require('./utils/middleware');
 const logger = require('./utils/logger');
 const app = express();
@@ -14,6 +15,7 @@ mongoose.connect(config.MONGODB_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useFindAndModify: false,
+    useCreateIndex: true,
 }).then(result => {
     logger.info('connected to MongoDB');
 }).catch(error => {
@@ -28,6 +30,7 @@ app.use(middleware.startRequest);
 
 app.use('/api/persons', phonebooksRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/login', loginRouter);
 
 app.use(middleware.unknownEndpoint);
 app.use(middleware.errorHandler);

@@ -70,9 +70,12 @@ describe('when there is initially a phonebook', () => {
             const person = {
                 name: 'Jane',
                 number: 20000203,
-                userId: await helper.validUserId(),
             };
-            await api.post('/api/persons').send(person).expect(201);
+            const token = await helper.validToken();
+            await api.post('/api/persons')
+                .set('Authorization', 'bearer ' + token)
+                .send(person)
+                .expect(201);
             const phonebookAtEnd = await helper.personsInDb();
             const names = phonebookAtEnd.map(p => p.name);
 
@@ -84,9 +87,12 @@ describe('when there is initially a phonebook', () => {
         test('fails with a person without name', async (done) => {
             const person = {
                 number: 20000203,
-                userId: await helper.validUserId(),
             };
-            await api.post('/api/persons').send(person).expect(400);
+            const token = await helper.validToken();
+            await api.post('/api/persons')
+                .set('Authorization', 'bearer ' + token)
+                .send(person)
+                .expect(400);
             const phonebookAtEnd = await helper.personsInDb();
 
             expect(phonebookAtEnd.length).toBe(helper.initialPhonebook.length);
@@ -96,9 +102,28 @@ describe('when there is initially a phonebook', () => {
         test('fails with a person without number', async (done) => {
             const person = {
                 name: 'Jane',
-                userId: await helper.validUserId(),
             };
-            await api.post('/api/persons').send(person).expect(400);
+            const token = await helper.validToken();
+            await api.post('/api/persons')
+                .set('Authorization', 'bearer ' + token)
+                .send(person)
+                .expect(400);
+            const phonebookAtEnd = await helper.personsInDb();
+
+            expect(phonebookAtEnd.length).toBe(helper.initialPhonebook.length);
+            done();
+        });
+
+        test('fails with a valid person with a invalid token', async (done) => {
+            const person = {
+                name: 'Jane',
+                number: 20000203,
+            };
+            const token = helper.invalidToken();
+            await api.post('/api/persons')
+                .set('Authorization', 'bearer ' + token)
+                .send(person)
+                .expect(401);
             const phonebookAtEnd = await helper.personsInDb();
 
             expect(phonebookAtEnd.length).toBe(helper.initialPhonebook.length);

@@ -1,6 +1,17 @@
+const config = require('../utils/config');
+const jwt = require('jsonwebtoken');
 const phonebooksRouter = require('express').Router();
 const Phonebook = require('../models/phonebook');
 const User = require('../models/user');
+
+const getTokenFrom = req => {
+    const authorization = req.get('authorization');
+
+    if (authorization && authorization.toLowerCase().startsWith('bearer ')) {
+        return authorization.substring(7);
+    }
+    return null;
+};
 
 phonebooksRouter.get('/info', async (req, res) => {
     const persons = await Phonebook.find({});
@@ -22,19 +33,26 @@ phonebooksRouter.route('/')
     })
     .post(async (req, res, next) => {
         let { body } = req;
-        let { name, number, userId } = body;
-        let persons = await Phonebook.find({});
-        let user = await User.findById(userId);
-
-        if (name && persons.some((person) => person.name === name.toString())) {
-            return res.status(400).json({
-                error: 'name is duplicated',
-            });
-        }
-
-        let newPerson = new Phonebook({ name, number, user: user._id });
+        let { name, number } = body;
+        let token = getTokenFrom(req);
 
         try {
+            const decodedToken = jwt.verify(token, config.SECRET);
+
+            if (!token || !decodedToken.id) {
+                return res.status(401).json({ error: 'token missing or invalid' });
+            }
+
+            let persons = await Phonebook.find({});
+            let user = await User.findById(decodedToken.id);
+
+            if (name && persons.some((person) => person.name === name.toString())) {
+                return res.status(400).json({
+                    error: 'name is duplicated',
+                });
+            }
+
+            let newPerson = new Phonebook({ name, number, user: user._id });
             let savedPerson = await newPerson.save();
 
             user.persons = user.persons.concat(savedPerson._id);

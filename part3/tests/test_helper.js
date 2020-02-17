@@ -1,3 +1,5 @@
+const config = require('../utils/config');
+const jwt = require('jsonwebtoken');
 const Phonebook = require('../models/phonebook');
 const User = require('../models/user');
 
@@ -51,6 +53,12 @@ const validUserId = async () => {
     return user._id;
 };
 
+const validToken = async () =>
+    jwt.sign({ id: await validUserId() }, config.SECRET);
+
+const invalidToken = () =>
+    jwt.sign({}, config.SECRET);
+
 module.exports = {
     initialPhonebook,
     nonExistingId,
@@ -59,4 +67,6 @@ module.exports = {
     initialUser,
     usersInDb,
     validUserId,
+    validToken,
+    invalidToken,
 };
